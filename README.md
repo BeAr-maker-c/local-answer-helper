@@ -8,6 +8,7 @@
 - **AI 解答**：把题目序列化为结构化 prompt，发送给可配置的 OpenAI 兼容 `/chat/completions` 接口，解析返回的 JSON。
 - **UI 展示**：右侧悬浮侧边栏展示每道题与 AI 答案，答案可手动修改。
 - **自动作答**：一键把答案写回题目 DOM——选择题/判断题模拟点击选项、填空/简答用「原生 value setter + input/change/blur 事件」绕过前端框架受控组件。
+- **截图搜题**：点击「截图搜题」，在页面上拖拽框选题目区域，截图发给支持视觉的多模态模型，AI 返回答案并在侧边栏展示。
 
 ## 文件结构
 
@@ -38,6 +39,7 @@ local-answer-helper/
 | Base URL | OpenAI 兼容接口根地址 | `https://api.deepseek.com/v1` |
 | API Key | 对应服务的密钥 | `sk-...` |
 | 模型名 | 模型 id | `deepseek-chat` / `qwen2.5:7b` |
+| 视觉模型 | 截图搜题用的多模态模型，留空则沿用模型名 | `qwen-vl-max` / `gpt-4o` |
 | System Prompt | 约束输出格式，一般不改 | — |
 
 内置快捷预设：DeepSeek、Ollama 本地（`http://127.0.0.1:11434/v1`）、OpenAI、自定义本地 vLLM。

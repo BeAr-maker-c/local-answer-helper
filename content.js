@@ -1,4 +1,4 @@
-// content.js — 内容脚本：读取题目、调用 AI、展示答案、一键写入答案
+// content.js — 内容脚本：读取题目、调用 AI、截图搜题、展示答案、一键写入答案
 (function () {
   if (window.__lafInjected) return;
   window.__lafInjected = true;
@@ -44,11 +44,8 @@
   // 从 AI 返回文本中提取第一个 JSON 对象
   function extractJSON(str) {
     if (!str) return null;
-    // 先尝试直接 parse
     try { return JSON.parse(str); } catch (e) {}
-    // 去掉 markdown 代码块
     let s = str.replace(/```json/gi, "").replace(/```/g, "");
-    // 提取第一个 { ... } 平衡块
     const start = s.indexOf("{");
     if (start < 0) return null;
     let depth = 0;
@@ -63,6 +60,13 @@
       }
     }
     return null;
+  }
+
+  function el(tag, cls, text) {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
   }
 
   // 同源 iframe 的 document 列表
@@ -80,39 +84,25 @@
   }
 
   // ===================== 题目扫描 =====================
-  // 每个 question: { doc, root, index, type, text, options:[{letter,text,li}], blanks:[], textarea }
   function parseQuestion(doc, root, index) {
     const q = { doc, root, index, type: "unknown", text: "", options: [], blanks: [], textarea: null };
-
     q.text = textOf(root.querySelector(".question-name .html-content-box") || root.querySelector(".html-content-box") || root);
-
     const typeEl = root.querySelector(".question-name .grey-text") || root.querySelector(".grey-text");
-    const typeStr = textOf(typeEl).replace(/[\[\]【】\s]/g, "");
-    q.type = typeStr;
-
-    // 选择题 / 判断题选项
+    q.type = textOf(typeEl).replace(/[\[\]【】\s]/g, "");
     root.querySelectorAll(".option-list > li").forEach((li) => {
       const letter = textOf(li.querySelector(".option-letter")) || "";
-      const optText = textOf(li);
-      q.options.push({ letter, text: optText, li });
+      q.options.push({ letter, text: textOf(li), li });
     });
-
-    // 填空题输入框
     q.blanks = [...root.querySelectorAll(".option-fill-list > li > input.ofl-ipt, .option-fill-list input")];
-
-    // 简答题 textarea
     q.textarea = root.querySelector(".short-answer-textarea > textarea") || root.querySelector("textarea");
-
     return q;
   }
 
   function collectQuestions() {
     const questions = [];
     for (const doc of accessibleFrames()) {
-      let roots = [...doc.querySelectorAll(".question-item")].filter(visible);
-      if (roots.length) {
-        roots.forEach((root, i) => questions.push(parseQuestion(doc, root, questions.length)));
-      }
+      const roots = [...doc.querySelectorAll(".question-item")].filter(visible);
+      roots.forEach((root) => questions.push(parseQuestion(doc, root, questions.length)));
     }
     return questions;
   }
@@ -128,7 +118,6 @@
     for (let i = 0; i < q.options.length; i++) {
       if (q.options[i].letter === up) return i;
     }
-    // 判断题：把 "正确/对/错误/错" 映射到选项文本
     if (q.type.includes("判断")) {
       const isTrue = /正确|对|√|true|T/i.test(String(letter));
       const isFalse = /错误|错|×|false|F/i.test(String(letter));
@@ -163,7 +152,6 @@
     if (!q.blanks.length) return false;
     let parts = String(answer || "").split(/[；;，,、|]/).map((s) => s.trim()).filter(Boolean);
     if (parts.length === 1 && q.blanks.length > 1) {
-      // 无分隔时，逐字填充到各空
       const chars = Array.from(parts[0]);
       if (chars.length === q.blanks.length) parts = chars;
     }
@@ -189,9 +177,7 @@
         names.forEach((name) => {
           try {
             const ed = UE.getEditor(name);
-            if (ed && ed.setContent) {
-              ed.setContent("<p>" + String(content || "") + "</p>");
-            }
+            if (ed && ed.setContent) ed.setContent("<p>" + String(content || "") + "</p>");
           } catch (e) {}
         });
         return true;
@@ -221,17 +207,15 @@
       if (q.options.length) {
         lines.push("选项：" + q.options.map((o) => (o.letter ? o.letter + ". " : "") + o.text).join("  "));
       }
-      if (q.blanks.length) {
-        lines.push("（共 " + q.blanks.length + " 个空）");
-      }
+      if (q.blanks.length) lines.push("（共 " + q.blanks.length + " 个空）");
       lines.push("");
     });
     return lines.join("\n");
   }
 
-  async function callAI(prompt) {
+  async function callAI(prompt, imageDataUrl) {
     return new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage({ type: "SOLVE", payload: { prompt } }, (resp) => {
+      chrome.runtime.sendMessage({ type: "SOLVE", payload: { prompt, imageDataUrl } }, (resp) => {
         if (chrome.runtime.lastError) return reject(new Error(chrome.runtime.lastError.message));
         if (resp && resp.ok) return resolve(resp.content);
         reject(new Error(resp?.error || "UNKNOWN"));
@@ -239,15 +223,129 @@
     });
   }
 
+  // ===================== 截图搜题 =====================
+  function captureTab() {
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({ type: "CAPTURE_TAB" }, (resp) => {
+        if (chrome.runtime.lastError) return reject(new Error(chrome.runtime.lastError.message));
+        if (resp && resp.ok) return resolve(resp.dataUrl);
+        reject(new Error(resp?.error || "CAPTURE_FAILED"));
+      });
+    });
+  }
+
+  function cropImage(img, rect) {
+    const ratio = img.naturalWidth / img.clientWidth || 1;
+    const x = Math.max(0, Math.min(rect.left, img.clientWidth));
+    const y = Math.max(0, Math.min(rect.top, img.clientHeight));
+    const w = Math.max(1, Math.min(rect.width, img.clientWidth - x));
+    const h = Math.max(1, Math.min(rect.height, img.clientHeight - y));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(w * ratio);
+    canvas.height = Math.round(h * ratio);
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, x * ratio, y * ratio, w * ratio, h * ratio, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/png");
+  }
+
+  function showShotOverlay(dataUrl) {
+    return new Promise((resolve) => {
+      const overlay = document.createElement("div");
+      overlay.id = "laf-shot-overlay";
+      const img = document.createElement("img");
+      img.className = "laf-shot-img";
+      img.src = dataUrl;
+      const box = document.createElement("div");
+      box.className = "laf-shot-box";
+      const tip = document.createElement("div");
+      tip.className = "laf-shot-tip";
+      tip.textContent = "拖拽框选题目区域 · 松开确认 · Esc 取消";
+      overlay.appendChild(img);
+      overlay.appendChild(box);
+      overlay.appendChild(tip);
+      document.documentElement.appendChild(overlay);
+
+      let start = null, selecting = false;
+      function onDown(e) {
+        selecting = true;
+        start = { x: e.clientX, y: e.clientY };
+        box.style.display = "block";
+        box.style.left = start.x + "px";
+        box.style.top = start.y + "px";
+        box.style.width = "0px";
+        box.style.height = "0px";
+      }
+      function onMove(e) {
+        if (!selecting) return;
+        const x = Math.min(e.clientX, start.x);
+        const y = Math.min(e.clientY, start.y);
+        const w = Math.abs(e.clientX - start.x);
+        const h = Math.abs(e.clientY - start.y);
+        box.style.left = x + "px";
+        box.style.top = y + "px";
+        box.style.width = w + "px";
+        box.style.height = h + "px";
+      }
+      function onUp() {
+        if (!selecting) return;
+        selecting = false;
+        const r = box.getBoundingClientRect();
+        if (r.width < 12 || r.height < 12) {
+          cleanup();
+          resolve(null);
+          return;
+        }
+        const cropped = cropImage(img, r);
+        cleanup();
+        resolve(cropped);
+      }
+      function onKey(e) {
+        if (e.key === "Escape") { cleanup(); resolve(null); }
+      }
+      function cleanup() {
+        overlay.remove();
+        document.removeEventListener("mousemove", onMove);
+        document.removeEventListener("mouseup", onUp);
+        document.removeEventListener("keydown", onKey);
+      }
+      overlay.addEventListener("mousedown", onDown);
+      document.addEventListener("mousemove", onMove);
+      document.addEventListener("mouseup", onUp);
+      document.addEventListener("keydown", onKey);
+    });
+  }
+
+  const SHOT_PROMPT =
+    '请阅读图片中的题目并解答。只输出 JSON：{"answers":[{"index":0,"answer":"A或答案文本","question":"简短题干"}]}。规则：选择题填选项字母；判断题填正确/错误；填空/简答填答案文本。不要输出 JSON 以外的内容。';
+
+  function renderShotResult(parsed, raw) {
+    const list = document.querySelector("#laf-root .laf-list");
+    if (!list) return;
+    const old = list.querySelector("#laf-shot-result");
+    if (old) old.remove();
+    const card = el("div", "laf-q laf-shot-result");
+    card.id = "laf-shot-result";
+    const head = el("div", "laf-q-head");
+    head.appendChild(el("span", "laf-q-badge", "📷"));
+    head.appendChild(el("div", "laf-q-title", "截图搜题结果"));
+    card.appendChild(head);
+    if (parsed && Array.isArray(parsed.answers) && parsed.answers.length) {
+      parsed.answers.forEach((a, i) => {
+        const line = el("div", "laf-shot-line");
+        const q = a.question ? "（" + a.question + "）" : "";
+        line.textContent = (i + 1) + ". " + q + " → " + (a.answer != null ? a.answer : "");
+        card.appendChild(line);
+      });
+    } else {
+      const pre = el("div", "laf-shot-raw");
+      pre.textContent = raw || "（无返回）";
+      card.appendChild(pre);
+    }
+    list.insertBefore(card, list.firstChild);
+  }
+
   // ===================== 侧边栏 UI =====================
   let state = { questions: [], answers: {} };
-
-  function el(tag, cls, text) {
-    const n = document.createElement(tag);
-    if (cls) n.className = cls;
-    if (text != null) n.textContent = text;
-    return n;
-  }
 
   function buildPanel() {
     const host = document.createElement("div");
@@ -268,19 +366,30 @@
 
     const actions = el("div", "laf-actions");
     const scanBtn = el("button", "laf-btn laf-primary", "扫描题目并 AI 解答");
+    const shotBtn = el("button", "laf-btn", "截图搜题");
     const fillAllBtn = el("button", "laf-btn", "全部填入");
     const clearBtn = el("button", "laf-btn laf-ghost", "清空");
     actions.appendChild(scanBtn);
+    actions.appendChild(shotBtn);
     actions.appendChild(fillAllBtn);
     actions.appendChild(clearBtn);
 
     const status = el("div", "laf-status", "");
     const list = el("div", "laf-list");
 
+    const footer = el("div", "laf-footer");
+    const settingsBtn = el("button", "laf-settings", "⚙ 设置");
+    settingsBtn.title = "打开设置";
+    settingsBtn.addEventListener("click", () => {
+      chrome.runtime.sendMessage({ type: "OPEN_OPTIONS" });
+    });
+    footer.appendChild(settingsBtn);
+
     panel.appendChild(header);
     panel.appendChild(actions);
     panel.appendChild(status);
     panel.appendChild(list);
+    panel.appendChild(footer);
 
     host.appendChild(toggle);
     host.appendChild(panel);
@@ -330,6 +439,33 @@
         }
       } finally {
         scanBtn.disabled = false;
+      }
+    });
+
+    shotBtn.addEventListener("click", async () => {
+      const restore = () => { host.style.display = ""; };
+      try {
+        host.style.display = "none"; // 隐藏侧边栏，避免被截入
+        await new Promise((r) => setTimeout(r, 120));
+        setStatus("请框选题目区域…");
+        const dataUrl = await captureTab();
+        const cropped = await showShotOverlay(dataUrl);
+        if (!cropped) {
+          restore();
+          setStatus("已取消截图");
+          return;
+        }
+        setStatus("正在识别并解答…");
+        const raw = await callAI(SHOT_PROMPT, cropped);
+        const parsed = extractJSON(raw);
+        restore();
+        renderShotResult(parsed, raw);
+        panel.classList.add("laf-open");
+        toggle.style.display = "none";
+        setStatus("截图搜题完成");
+      } catch (e) {
+        restore();
+        setStatus("截图搜题失败：" + (e.message || e), true);
       }
     });
 
@@ -391,7 +527,6 @@
   function init() {
     if (window.top !== window) return; // 侧边栏只注入主框架
     const { renderList } = buildPanel();
-    // 每 3 秒自动重扫，保持题目列表更新（不自动调 AI）
     setInterval(() => {
       const qs = collectQuestions();
       if (qs.length !== state.questions.length) {

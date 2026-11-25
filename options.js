@@ -4,6 +4,7 @@ const DEFAULTS = {
   baseUrl: "https://api.deepseek.com/v1",
   apiKey: "",
   model: "deepseek-chat",
+  visionModel: "",
   systemPrompt:
     "你是答题助手。请只输出一个 JSON 对象，不要输出任何其它文字、解释或代码块标记。",
 };
@@ -16,6 +17,7 @@ async function load() {
   $("baseUrl").value = s.baseUrl;
   $("apiKey").value = s.apiKey;
   $("model").value = s.model;
+  $("visionModel").value = s.visionModel;
   $("systemPrompt").value = s.systemPrompt;
 }
 
@@ -24,6 +26,7 @@ async function save() {
     baseUrl: $("baseUrl").value.trim(),
     apiKey: $("apiKey").value.trim(),
     model: $("model").value.trim(),
+    visionModel: $("visionModel").value.trim(),
     systemPrompt: $("systemPrompt").value.trim(),
   };
   await chrome.storage.local.set(settings);

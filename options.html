@@ -5,58 +5,247 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>本地 AI 答题助手 · 设置</title>
   <style>
-    :root { color-scheme: light dark; }
+    :root {
+      color-scheme: light dark;
+      --bg: #f4f6f8;
+      --card: #ffffff;
+      --text: #1f2329;
+      --muted: #6b7280;
+      --border: #e4e7ec;
+      --accent: #3d7eb8;
+      --accent-text: #ffffff;
+      --req: #e5484d;
+      --input-bg: #fafbfc;
+      --focus-ring: rgba(76, 143, 214, 0.2);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #16181d;
+        --card: #1e2128;
+        --text: #e8eaef;
+        --muted: #8b93a3;
+        --border: #2b2f39;
+        --accent: #4c8fd6;
+        --input-bg: #23262e;
+      }
+    }
+    * { box-sizing: border-box; }
     body {
+      margin: 0;
+      padding: 26px 30px 40px;
+      background: var(--bg);
+      color: var(--text);
       font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
-      max-width: 620px; margin: 32px auto; padding: 0 20px; line-height: 1.6;
+      line-height: 1.5;
+      font-size: 14px;
     }
-    h1 { font-size: 20px; }
-    label { display: block; font-weight: 600; margin: 16px 0 6px; }
+    .wrap { max-width: 960px; margin: 0 auto; }
+
+    /* 顶栏：横向紧凑 */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #5ba0e8, #3a6ea8);
+      color: #fff;
+      font-weight: 700;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(60, 110, 168, 0.3);
+    }
+    h1 { font-size: 20px; font-weight: 700; margin: 0; letter-spacing: 0.2px; }
+    .sub { font-size: 12.5px; color: var(--muted); margin: 1px 0 0; }
+
+    /* 主卡片：左侧标签 + 右侧输入，逐行扁平 */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 4px 24px;
+    }
+    .row {
+      display: flex;
+      gap: 18px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      align-items: flex-start;
+    }
+    .row:last-child { border-bottom: none; }
+    .row > label {
+      width: 156px;
+      flex-shrink: 0;
+      text-align: right;
+      padding-top: 9px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin: 0;
+    }
+    .field { flex: 1; min-width: 0; }
+    .req { color: var(--req); font-weight: 600; }
+    .tag {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 0 6px;
+      margin-left: 5px;
+      vertical-align: 1px;
+    }
+
     input, textarea {
-      width: 100%; box-sizing: border-box; padding: 9px 10px;
-      border: 1px solid #8884; border-radius: 8px; font-size: 14px;
-      background: transparent; color: inherit;
+      width: 100%;
+      padding: 9px 13px;
+      font-size: 14.5px;
+      line-height: 1.45;
+      color: var(--text);
+      background: var(--input-bg);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      font-family: inherit;
     }
-    textarea { min-height: 90px; resize: vertical; }
-    .hint { color: #888; font-size: 12px; margin-top: 4px; }
-    button {
-      margin-top: 20px; padding: 10px 20px; font-size: 15px; cursor: pointer;
-      border: none; border-radius: 8px; background: #3d7eb8; color: #fff;
+    input:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--focus-ring);
     }
-    button:hover { filter: brightness(1.05); }
-    #status { margin-left: 12px; font-size: 13px; }
-    .presets { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
-    .presets button { margin: 0; padding: 6px 12px; font-size: 13px; background: #555; }
-    code { background: #8882; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+    textarea { min-height: 64px; resize: vertical; }
+
+    .presets {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .presets button {
+      margin: 0;
+      padding: 5px 13px;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--text);
+      background: transparent;
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .presets button:hover { border-color: var(--accent); color: var(--accent); }
+
+    .hint {
+      margin: 5px 0 0;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+    .hint code {
+      background: rgba(128, 128, 128, 0.14);
+      padding: 0 5px;
+      border-radius: 4px;
+      font-size: 11.5px;
+    }
+
+    .footer {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 16px;
+    }
+    #save {
+      padding: 10px 26px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent-text);
+      background: linear-gradient(135deg, #4c8fd6, #3a6ea8);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(60, 110, 168, 0.3);
+      transition: filter 0.15s, transform 0.1s;
+    }
+    #save:hover { filter: brightness(1.08); }
+    #save:active { transform: translateY(1px); }
+    #status { font-size: 13px; color: #3f9b57; font-weight: 500; }
+
+    /* 窄屏降级为上下布局 */
+    @media (max-width: 640px) {
+      .row { flex-direction: column; gap: 6px; }
+      .row > label { width: auto; text-align: left; padding-top: 0; }
+    }
   </style>
 </head>
 <body>
-  <h1>本地 AI 答题助手 · 设置</h1>
-  <p class="hint">插件通过「OpenAI 兼容 /chat/completions」接口解答题目。填任意兼容服务即可。</p>
+  <div class="wrap">
+    <header>
+      <div class="logo">AI</div>
+      <div>
+        <h1>本地 AI 答题助手</h1>
+        <p class="sub">配置 AI 接口 · 文字搜题 / 截图搜题</p>
+      </div>
+    </header>
 
-  <label>接口 Base URL</label>
-  <input id="baseUrl" placeholder="https://api.deepseek.com/v1" />
-  <div class="presets">
-    <button data-base="https://api.deepseek.com/v1">DeepSeek</button>
-    <button data-base="http://127.0.0.1:11434/v1">Ollama 本地</button>
-    <button data-base="https://api.openai.com/v1">OpenAI</button>
-    <button data-base="http://127.0.0.1:8000/v1">自定义 vLLM/本地</button>
-  </div>
+    <div class="card">
+      <div class="row">
+        <label>接口 Base URL <span class="req">*</span></label>
+        <div class="field">
+          <input id="baseUrl" placeholder="https://api.deepseek.com/v1" />
+          <div class="presets">
+            <button data-base="https://api.deepseek.com/v1">DeepSeek</button>
+            <button data-base="http://127.0.0.1:11434/v1">Ollama 本地</button>
+            <button data-base="https://api.openai.com/v1">OpenAI</button>
+            <button data-base="http://127.0.0.1:8000/v1">本地 vLLM</button>
+          </div>
+          <p class="hint">兼容 OpenAI 的 <code>/chat/completions</code> 接口，须以 <code>/v1</code> 结尾。</p>
+        </div>
+      </div>
 
-  <label>API Key</label>
-  <input id="apiKey" type="password" placeholder="sk-..." autocomplete="off" />
+      <div class="row">
+        <label>API Key <span class="req">*</span></label>
+        <div class="field">
+          <input id="apiKey" type="password" placeholder="sk-..." autocomplete="off" />
+          <p class="hint">服务商控制台获取，仅保存在本机浏览器。</p>
+        </div>
+      </div>
 
-  <label>模型名</label>
-  <input id="model" placeholder="deepseek-chat" />
-  <div class="hint">例：<code>deepseek-chat</code>、<code>qwen2.5:7b</code>、<code>gpt-4o-mini</code></div>
+      <div class="row">
+        <label>模型名 <span class="tag">文字搜题</span></label>
+        <div class="field">
+          <input id="model" placeholder="deepseek-chat" />
+          <p class="hint">例：<code>deepseek-chat</code>、<code>qwen2.5:7b</code>、<code>gpt-4o-mini</code></p>
+        </div>
+      </div>
 
-  <label>System Prompt</label>
-  <textarea id="systemPrompt"></textarea>
-  <div class="hint">用于约束输出格式，一般无需修改。</div>
+      <div class="row">
+        <label>视觉模型 <span class="tag">截图搜题</span></label>
+        <div class="field">
+          <input id="visionModel" placeholder="如 qwen-vl-max / gpt-4o / 留空则沿用上项" />
+          <p class="hint">截图搜题需模型支持图片输入；DeepSeek 文本模型不支持图片，请填多模态模型。</p>
+        </div>
+      </div>
 
-  <div>
-    <button id="save">保存</button>
-    <span id="status"></span>
+      <div class="row">
+        <label>System Prompt <span class="tag">高级</span></label>
+        <div class="field">
+          <textarea id="systemPrompt" placeholder="用于约束输出格式，一般无需修改"></textarea>
+          <p class="hint">要求 AI 只输出 JSON，便于插件解析答案。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <button id="save">保存设置</button>
+      <span id="status"></span>
+    </div>
   </div>
 
   <script src="options.js"></script>
