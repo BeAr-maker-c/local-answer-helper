@@ -1,0 +1,225 @@
+/* content.css — 侧边栏样式（加宽 + 简洁装饰） */
+#laf-root {
+  --laf-bg: #1b1d23;
+  --laf-card: #242732;
+  --laf-border: rgba(255, 255, 255, 0.08);
+  --laf-accent: #4c8fd6;
+  --laf-accent-deep: #3a6ea8;
+  --laf-text: #e8eaef;
+  --laf-muted: #8b93a3;
+  --laf-green: #7ccb8a;
+  --laf-red: #e8929c;
+  font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+  font-size: 13px;
+  color: var(--laf-text);
+}
+
+/* 收起的竖条入口 */
+#laf-root .laf-toggle {
+  position: fixed;
+  right: 0;
+  top: 45%;
+  z-index: 2147483646;
+  background: linear-gradient(180deg, #5ba0e8, #3a6ea8);
+  color: #fff;
+  padding: 16px 7px;
+  border-radius: 10px 0 0 10px;
+  cursor: pointer;
+  writing-mode: vertical-rl;
+  letter-spacing: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+  user-select: none;
+  transition: padding 0.15s ease;
+}
+#laf-root .laf-toggle:hover { padding-right: 11px; }
+
+/* 主面板 */
+#laf-root .laf-panel {
+  position: fixed;
+  top: 0;
+  right: -452px;
+  width: 440px;
+  height: 100vh;
+  z-index: 2147483647;
+  background: var(--laf-bg);
+  border-left: 1px solid var(--laf-border);
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  transition: right 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+#laf-root .laf-panel.laf-open { right: 0; }
+
+/* 头部 */
+#laf-root .laf-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--laf-border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent);
+}
+#laf-root .laf-logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #5ba0e8, #3a6ea8);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(60, 110, 168, 0.4);
+}
+#laf-root .laf-titlewrap { flex: 1; }
+#laf-root .laf-title { font-size: 15px; font-weight: 600; line-height: 1.2; }
+#laf-root .laf-subtitle { font-size: 11px; color: var(--laf-muted); margin-top: 2px; }
+#laf-root .laf-close {
+  background: none;
+  border: none;
+  color: var(--laf-muted);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+}
+#laf-root .laf-close:hover { color: var(--laf-text); background: rgba(255, 255, 255, 0.06); }
+
+/* 操作按钮区 */
+#laf-root .laf-actions {
+  display: flex;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--laf-border);
+  flex-wrap: wrap;
+}
+#laf-root .laf-btn {
+  background: var(--laf-card);
+  color: var(--laf-text);
+  border: 1px solid var(--laf-border);
+  border-radius: 8px;
+  padding: 8px 13px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: filter 0.15s, border-color 0.15s;
+}
+#laf-root .laf-btn:hover { filter: brightness(1.2); border-color: rgba(255, 255, 255, 0.16); }
+#laf-root .laf-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+#laf-root .laf-primary {
+  background: linear-gradient(135deg, #4c8fd6, #3a6ea8);
+  border: none;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(60, 110, 168, 0.35);
+}
+#laf-root .laf-ghost { background: transparent; }
+#laf-root .laf-mini { padding: 5px 11px; font-size: 12px; border-radius: 7px; }
+
+/* 状态栏 */
+#laf-root .laf-status {
+  padding: 9px 14px;
+  font-size: 12px;
+  color: var(--laf-green);
+  border-bottom: 1px solid var(--laf-border);
+  min-height: 17px;
+  word-break: break-all;
+  line-height: 1.5;
+}
+#laf-root .laf-status::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--laf-green);
+  margin-right: 7px;
+  vertical-align: middle;
+}
+#laf-root .laf-status:empty::before { display: none; }
+#laf-root .laf-status.laf-err { color: var(--laf-red); }
+#laf-root .laf-status.laf-err::before { background: var(--laf-red); }
+
+/* 题目列表 */
+#laf-root .laf-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+}
+#laf-root .laf-list::-webkit-scrollbar { width: 8px; }
+#laf-root .laf-list::-webkit-scrollbar-track { background: transparent; }
+#laf-root .laf-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.13); border-radius: 4px; }
+#laf-root .laf-list::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.22); }
+
+/* 题目卡片 */
+#laf-root .laf-q {
+  background: var(--laf-card);
+  border: 1px solid var(--laf-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  transition: border-color 0.15s;
+}
+#laf-root .laf-q:hover { border-color: rgba(255, 255, 255, 0.15); }
+#laf-root .laf-q-head {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+#laf-root .laf-q-badge {
+  flex-shrink: 0;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  box-sizing: border-box;
+  border-radius: 6px;
+  background: rgba(76, 143, 214, 0.18);
+  color: #7fb3e8;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#laf-root .laf-q-title {
+  font-weight: 600;
+  font-size: 13px;
+  word-break: break-all;
+  line-height: 1.5;
+}
+#laf-root .laf-q-opts {
+  color: var(--laf-muted);
+  font-size: 12px;
+  margin-bottom: 8px;
+  word-break: break-all;
+  line-height: 1.5;
+  padding-left: 28px;
+}
+#laf-root .laf-q-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+#laf-root .laf-q-answer {
+  flex: 1;
+  background: #171a20;
+  border: 1px solid var(--laf-border);
+  border-radius: 7px;
+  padding: 7px 10px;
+  color: var(--laf-text);
+  font-size: 13px;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+#laf-root .laf-q-answer:focus {
+  outline: none;
+  border-color: var(--laf-accent);
+}
+#laf-root .laf-q-answer::placeholder { color: var(--laf-muted); }

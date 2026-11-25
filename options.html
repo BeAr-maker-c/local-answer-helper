@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>本地 AI 答题助手 · 设置</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+      max-width: 620px; margin: 32px auto; padding: 0 20px; line-height: 1.6;
+    }
+    h1 { font-size: 20px; }
+    label { display: block; font-weight: 600; margin: 16px 0 6px; }
+    input, textarea {
+      width: 100%; box-sizing: border-box; padding: 9px 10px;
+      border: 1px solid #8884; border-radius: 8px; font-size: 14px;
+      background: transparent; color: inherit;
+    }
+    textarea { min-height: 90px; resize: vertical; }
+    .hint { color: #888; font-size: 12px; margin-top: 4px; }
+    button {
+      margin-top: 20px; padding: 10px 20px; font-size: 15px; cursor: pointer;
+      border: none; border-radius: 8px; background: #3d7eb8; color: #fff;
+    }
+    button:hover { filter: brightness(1.05); }
+    #status { margin-left: 12px; font-size: 13px; }
+    .presets { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .presets button { margin: 0; padding: 6px 12px; font-size: 13px; background: #555; }
+    code { background: #8882; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h1>本地 AI 答题助手 · 设置</h1>
+  <p class="hint">插件通过「OpenAI 兼容 /chat/completions」接口解答题目。填任意兼容服务即可。</p>
+
+  <label>接口 Base URL</label>
+  <input id="baseUrl" placeholder="https://api.deepseek.com/v1" />
+  <div class="presets">
+    <button data-base="https://api.deepseek.com/v1">DeepSeek</button>
+    <button data-base="http://127.0.0.1:11434/v1">Ollama 本地</button>
+    <button data-base="https://api.openai.com/v1">OpenAI</button>
+    <button data-base="http://127.0.0.1:8000/v1">自定义 vLLM/本地</button>
+  </div>
+
+  <label>API Key</label>
+  <input id="apiKey" type="password" placeholder="sk-..." autocomplete="off" />
+
+  <label>模型名</label>
+  <input id="model" placeholder="deepseek-chat" />
+  <div class="hint">例：<code>deepseek-chat</code>、<code>qwen2.5:7b</code>、<code>gpt-4o-mini</code></div>
+
+  <label>System Prompt</label>
+  <textarea id="systemPrompt"></textarea>
+  <div class="hint">用于约束输出格式，一般无需修改。</div>
+
+  <div>
+    <button id="save">保存</button>
+    <span id="status"></span>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

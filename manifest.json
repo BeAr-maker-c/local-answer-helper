@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "本地 AI 答题助手",
+  "version": "1.0.0",
+  "description": "读取学习通等网页题目，调用本地/远程 OpenAI 兼容 AI 接口解答，并在 UI 展示答案、一键自动作答。",
+  "action": {
+    "default_title": "本地 AI 答题助手",
+    "default_popup": "options.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "options_ui": {
+    "open_in_tab": true,
+    "page": "options.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ],
+  "permissions": ["storage", "scripting", "activeTab"],
+  "host_permissions": ["<all_urls>"]
+}
